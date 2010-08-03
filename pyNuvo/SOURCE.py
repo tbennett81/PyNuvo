@@ -24,26 +24,26 @@ def CONFIG( source, enable = None, name = None, gain = None, shortname = None, n
 def DISPINFO( source, totalTime = None, currentTime = None, status = None ):
 	if totalTime == None or currentTime == None or status == None:
 		return '*S'+str(source)+'DISPINFO?\r\n'
-	if status not in range(0,9): assert False
-	return '*S'+str(source)+'DISPINFO,'+str(totalTime)+','+str(currentTime)+','+str(status)+'\r\n'		
+	if not isinstance(status, StatusType): assert False
+	return '*S'+str(source)+'DISPINFO,'+str(totalTime)+','+str(currentTime)+','+str(status.value)+'\r\n'		
 def DISPLINE( source, line1 = None, line2 = None, line3 = None, line4 = None ):
 	retval = ''
 	if line1 == None and line2 == None and line3 == None and line4 == None: 
 		retval += '*S'+str(source)+'DISPLINE?\r\n'
 	else:
 		if line1 != None:
-			retval += '*S'+str(source)+'DISPLINE1"'+line1+'"\r\n'
+			retval += '*S'+str(source)+'DISPLINE1,"'+line1+'"\r\n'
 		if line2 != None:
-			retval += '*S'+str(source)+'DISPLINE2"'+line2+'"\r\n'
+			retval += '*S'+str(source)+'DISPLINE2,"'+line2+'"\r\n'
 		if line3 != None:
-			retval += '*S'+str(source)+'DISPLINE3"'+line3+'"\r\n'
+			retval += '*S'+str(source)+'DISPLINE3,"'+line3+'"\r\n'
 		if line4 != None:
-			retval += '*S'+str(source)+'DISPLINE4"'+line4+'"\r\n'
+			retval += '*S'+str(source)+'DISPLINE4,"'+line4+'"\r\n'
 	return retval
-def MSG( source, msg, msg_type = INFORMATION, msg_time = NORMAL ):
-	if msg_type not in range(0,4): assert False
-	if msg_time not in range(0,3): assert False
-	return '*S'+str(source)+'MSG"'+msg[0:20]+'",'+str(msg_type)+','+str(msg_time)+'\r\n'
+def MSG( source, msg, msg_type = MessageType.Information, msg_time = MsgTimeType.Normal ):
+	if not isinstance(msg_type, MessageType): assert False
+	if not isinstance(msg_time, MsgTimeType): assert False
+	return '*S'+str(source)+'MSG"'+msg[0:20]+'",'+str(msg_type.value)+','+str(msg_time.value)+'\r\n'
 def NAME( source, name = None ):
 	if name == None:
 		return '*S'+str(source)+'NAME?\r\n'

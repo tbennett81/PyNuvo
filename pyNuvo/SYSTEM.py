@@ -24,7 +24,7 @@ def TIME( year = None, month = None, day = None, hour = None, minute = None ):
 def TIMEFORMAT( format = None ):
 	if format == None:
 		return '*CFGTIMEMODE?\r\n'
-	if format not in range(0,2): assert False
-	return '*CFGTIMEMODE'+str(format)+'\r\n'
+	if not isinstance( format, TimeFormatType) : assert False
+	return '*CFGTIMEMODE'+str(format.value)+'\r\n'
 def VER():
 	return '*VER\r\n'

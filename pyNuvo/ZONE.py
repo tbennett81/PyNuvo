@@ -25,8 +25,8 @@ def CONFIG(zone, enable=None, name=None, slaveTo=None, group=None, sources=None,
 		if xsrc != None:
 			retval += '*ZCFG'+str(zone)+'XSRC'+str(int(xsrc))+'\r\n'
 		if ir != None:
-			if ir<0 or ir>2: assert False
-			retval += '*ZCFG'+str(zone)+'IR'+str(ir)+'\r\n'
+			if not isinstance( ir, IRStateType ): assert False
+			retval += '*ZCFG'+str(zone)+'IR'+str(ir.value)+'\r\n'
 		#Expects a bitmask of DND State. Use DNDSTATE to have this created for you.
 		if dnd != None:
 			if dnd<0 or dnd>7: assert False
@@ -90,10 +90,10 @@ def LOCK( zone, turnOn, passcode = None ):
 	else:
 		if passcode == None: assert False
 		return '*Z'+str(zone)+'LOCKOFF"'+str(passcode).zfill(4)+'"\r\n'
-def MSG( zone, msg, msg_type = INFORMATION, msg_time = NORMAL ):
-	if msg_type<0 or msg_type>3: assert False
-	if msg_time<0 or msg_time>2: assert False
-	return '*Z'+str(zone)+'MSG"'+msg[0:20]+'",'+str(msg_type)+','+str(msg_time)+'\r\n'
+def MSG( zone, msg, msg_type = MessageType.Information, msg_time = MsgTimeType.Normal ):
+	if not isinstance(msg_type, MessageType): assert False
+	if not isinstance(msg_time, MsgTimeType): assert False
+	return '*Z'+str(zone)+'MSG"'+msg[0:20]+'",'+str(msg_type.value)+','+str(msg_time.value)+'\r\n'
 def MUTE( zone, turnOn ):
 	if turnOn:
 		return '*Z'+str(zone)+'MUTEON\r\n'

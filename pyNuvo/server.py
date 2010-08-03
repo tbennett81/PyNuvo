@@ -1,11 +1,18 @@
+import os
 import rpyc
 import threading
 import time
+import consts, SOURCE, SYSTEM,ZONE
+import vlc
+import ctypes
+import random
 
-from command import consts, SOURCE, SYSTEM, ZONE
+#from command import consts, SOURCE, SYSTEM, ZONE
 #from Math import max, min
 from serial import Serial
 from rpyc.utils.server import ThreadedServer
+
+callbackmethod=ctypes.CFUNCTYPE(None, vlc.EventType, ctypes.c_uint)
 
 _MAX_SOURCES = 6
 _MAX_ZONES = 8
@@ -31,6 +38,11 @@ class PyNuvoServer(ThreadedServer):
 			PyNuvoServer.Zones.append(PyNuvoService.exposed__Zone(i))
 		for i in range(1, _MAX_SOURCES+1):
 			PyNuvoServer.Sources.append(PyNuvoService.exposed__Source(i))
+		time.sleep(10)
+		for i in range(0, _MAX_SOURCES):
+			if( PyNuvoServer.Sources[i].exposed_status.exposed_name != None and
+				PyNuvoServer.Sources[i].exposed_status.exposed_name[0:4] == 'HTPC' ):
+				PyNuvoServer.Sources[i].add_vlc()
 	def _send(self, cmd):
 		self.con.write(cmd)
 	def receive(self):
@@ -210,14 +222,32 @@ class PyNuvoServer(ThreadedServer):
 					##TODO: Send notification of Macro button
 					print 'Need to Send notification of Macro button'
 				elif msg[2:6] == 'NEXT':
-					##TODO: Send notification of Next button
-					print 'Need to Send notification of Next button'
+					if( PyNuvoServer.Sources[source_num].exposed_isHTPC ):
+						PyNuvoServer.Sources[source_num].next_song()
+				elif msg[2:7] == 'HNEXT':
+					if( PyNuvoServer.Sources[source_num].exposed_isHTPC ):
+						mp = PyNuvoServer.Sources[source_num].exposed_vlcPlayer
+						mp.set_rate(mp.get_rate() * 2)
+						PyNuvoServer.Sources[source_num].event_player_forward( vlc.EventType.MediaPlayerForward, source_num+1 )
 				elif msg[2:11] == 'PLAYPAUSE':
-					##TODO: Send notification of Play/Pause button
-					print 'Need to Send notification of Play/Pause button'
+					if( PyNuvoServer.Sources[source_num].exposed_isHTPC ):
+						mp = PyNuvoServer.Sources[source_num].exposed_vlcPlayer
+						if( mp.get_rate() != 1.0 ):
+							mp.set_rate(1.0)
+							PyNuvoServer.Sources[source_num].event_player_playing( vlc.EventType.MediaPlayerPlaying, source_num+1 )
+						else:
+							mp.pause()
 				elif msg[2:6] == 'PREV':
-					##TODO: Send notification of Previous button
-					print 'Need to Send notification of Previous button'
+					if( PyNuvoServer.Sources[source_num].exposed_isHTPC ):
+						PyNuvoServer.Sources[source_num].prev_song()
+				elif msg[2:7] == 'HPREV':
+					if( PyNuvoServer.Sources[source_num].exposed_isHTPC ):
+						mp = PyNuvoServer.Sources[source_num].exposed_vlcPlayer
+						# Not currently supported
+						# if( mp.get_rate() >= 0 ):
+							# mp.set_rate(-1.0)
+						# else:
+							# mp.set_rate( mp.get_rate() * 2 )
 				else:
 					print msg
 					assert False
@@ -270,6 +300,134 @@ class PyNuvoService(rpyc.Service):
 			PyNuvoServer.Send( SOURCE.DISPINFO(num) ) # Fill dispInfo
 			self.exposed_dispLine = exposed__SDispLine()
 			PyNuvoServer.Send( SOURCE.DISPLINE(num) ) # Fill dispLine
+			self.exposed_isHTPC = False
+		
+		def add_vlc(self):
+			self.exposed_isHTPC = True
+			self.exposed_HTPCNum = int(self.exposed_status.exposed_name[4:] )
+			
+			i = vlc.Instance()
+			mp = i.media_player_new()
+			m = i.media_new( get_playlists('d:\music')[0] )
+			
+			mp.set_media(m)
+			mp.play()
+			time.sleep(.5)
+			
+			self.exposed_vlcPlayer = mp
+			self.exposed_vlcMedia = m
+			self.exposed_vlcSongHistory = list()
+			
+			mp.event_manager().event_attach( vlc.EventType.MediaPlayerEndReached, self.event_player_end_reached, self.exposed_number )
+			mp.event_manager().event_attach( vlc.EventType.MediaPlayerPlaying, self.event_player_playing, self.exposed_number )
+			mp.event_manager().event_attach( vlc.EventType.MediaPlayerPaused, self.event_player_paused, self.exposed_number )
+			mp.event_manager().event_attach( vlc.EventType.MediaPlayerStopped, self.event_player_stopped, self.exposed_number)
+			mp.event_manager().event_attach( vlc.EventType.MediaPlayerForward, self.event_player_forward, self.exposed_number )
+			mp.event_manager().event_attach( vlc.EventType.MediaPlayerBackward, self.event_player_backward, self.exposed_number )
+			#mp.event_manager().event_attach( vlc.EventType.MediaPlayerTimeChanged, self.event_player_time_change, self.exposed_number )
+			
+			self.next_song()
+			
+		def prev_song(self):
+			mp = self.exposed_vlcPlayer
+			m = self.exposed_vlcMedia
+			
+			if( mp.is_playing() ):
+				mp.stop()
+
+			if( len(self.exposed_vlcSongHistory) > 1 ):
+				self.exposed_vlcSongHistory.pop()
+				
+			play = threading.Thread(target = self.play_song)
+			play.start()
+			
+		def next_song(self):
+			mp = self.exposed_vlcPlayer
+			m = self.exposed_vlcMedia
+			
+			if( mp.is_playing() ):
+				mp.stop()
+			
+			if( len(self.exposed_vlcSongHistory) >= 50 ) :
+				self.exposed_vlcSongHistory.pop(0)
+			self.exposed_vlcSongHistory.append( random.SystemRandom().choice(range(0, m.subitems().count())) )
+			
+			play = threading.Thread(target = self.play_song)
+			play.start()
+		
+		def play_song( self ) :
+			mp = self.exposed_vlcPlayer
+			m = self.exposed_vlcMedia
+			nm = m.subitems()[self.exposed_vlcSongHistory[-1]]
+			
+			line1 = ''
+			line2 = ''
+			line3 = ''
+			line4 = ''
+			
+			if( nm.get_meta(vlc.Meta.TrackNumber) != None ) :
+				line1 = nm.get_meta(vlc.Meta.TrackNumber)
+				if( nm.get_meta(vlc.Meta.Album) != None ) :
+					line1 += '. ' + nm.get_meta(vlc.Meta.Album)
+			elif( nm.get_meta(vlc.Meta.Album) != None ) :
+				line1 = nm.get_meta(vlc.Meta.Album)
+				
+			if( nm.get_meta(vlc.Meta.Genre) != None ) :
+				line2 = nm.get_meta(vlc.Meta.Genre)
+			if( nm.get_meta(vlc.Meta.Title) != None ) :
+				line3 = nm.get_meta(vlc.Meta.Title)
+			if( nm.get_meta(vlc.Meta.Artist) != None ) :
+				line4 = nm.get_meta(vlc.Meta.Artist)
+				
+			PyNuvoServer.Send( SOURCE.DISPLINE(self.exposed_number, line1, line2, line3, line4 ) )
+
+			while( not mp.will_play ):
+				time.sleep(.1)
+				pass
+				
+			mp.set_media( nm )
+			mp.play()
+			
+		@callbackmethod
+		def event_player_time_change(event, num):
+			source = PyNuvoServer.Sources[num-1]
+			mp = source.exposed_vlcPlayer
+			# PyNuvoServer.Send( SOURCE.DISPINFO(source.exposed_number, mp.get_length()/100, mp.get_time()/100, consts.StatusType.Playing ) )
+
+		@callbackmethod
+		def event_player_end_reached(event, num):
+			source = PyNuvoServer.Sources[num-1]
+			source.next_song()
+			
+		@callbackmethod
+		def event_player_playing(event, num):
+			source = PyNuvoServer.Sources[num-1]
+			mp = source.exposed_vlcPlayer
+			# PyNuvoServer.Send( SOURCE.DISPINFO(source.exposed_number, mp.get_length()/100, mp.get_time()/100, consts.StatusType.Playing ) )
+		
+		@callbackmethod
+		def event_player_paused(event, num):
+			source = PyNuvoServer.Sources[num-1]
+			mp = source.exposed_vlcPlayer
+			# PyNuvoServer.Send( SOURCE.DISPINFO(source.exposed_number, mp.get_length()/100, mp.get_time()/100, consts.StatusType.Paused ) )
+
+		@callbackmethod
+		def event_player_stopped(event, num):
+			source = PyNuvoServer.Sources[num-1]
+			mp = source.exposed_vlcPlayer
+			# PyNuvoServer.Send( SOURCE.DISPINFO(source.exposed_number, mp.get_length()/100, mp.get_time()/100, consts.StatusType.Idle ) )
+			
+		@callbackmethod
+		def event_player_forward(event, num):
+			source = PyNuvoServer.Sources[num-1]
+			mp = source.exposed_vlcPlayer
+			# PyNuvoServer.Send( SOURCE.DISPINFO(source.exposed_number, mp.get_length()/100, mp.get_time()/100, consts.StatusType.FastForward ) )
+
+		@callbackmethod
+		def event_player_backward(event, num):
+			source = PyNuvoServer.Sources[num-1]
+			mp = source.exposed_vlcPlayer
+			# PyNuvoServer.Send( SOURCE.DISPINFO(source.exposed_number, mp.get_length()/100, mp.get_time()/100, consts.StatusType.Rewind ) )
 			
 class exposed__SDispInfo:
 	def __init__(self):
@@ -337,6 +495,16 @@ class exposed__ZVolCfg:
 		self.exposed_pageVol = None
 		self.exposed_partyVol = None
 		self.exposed_volReset = None
+		
+def get_playlists(dirPath):
+    playLists=list()
+    for dirpath,dirnames,filenames in os.walk(dirPath):
+        for file in filenames:
+            if( os.path.splitext(file)[1] == '.xspf' ) :
+				playLists.append(dirpath + '\\' + file)
+ 
+    playLists.sort()
+    return playLists
 		
 if __name__ == '__main__':
 	_spam = PyNuvoServer( PyNuvoService, port=16886 )
