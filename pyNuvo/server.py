@@ -226,9 +226,8 @@ class PyNuvoServer(ThreadedServer):
 						PyNuvoServer.Sources[source_num].next_song()
 				elif msg[2:7] == 'HNEXT':
 					if( PyNuvoServer.Sources[source_num].exposed_isHTPC ):
-						mp = PyNuvoServer.Sources[source_num].exposed_vlcPlayer
-						mp.set_rate(mp.get_rate() * 2)
-						PyNuvoServer.Sources[source_num].event_player_forward( vlc.EventType.MediaPlayerForward, source_num+1 )
+						PyNuvoServer.Sources[source_num].next_playList()
+						
 				elif msg[2:11] == 'PLAYPAUSE':
 					if( PyNuvoServer.Sources[source_num].exposed_isHTPC ):
 						mp = PyNuvoServer.Sources[source_num].exposed_vlcPlayer
@@ -242,12 +241,7 @@ class PyNuvoServer(ThreadedServer):
 						PyNuvoServer.Sources[source_num].prev_song()
 				elif msg[2:7] == 'HPREV':
 					if( PyNuvoServer.Sources[source_num].exposed_isHTPC ):
-						mp = PyNuvoServer.Sources[source_num].exposed_vlcPlayer
-						# Not currently supported
-						# if( mp.get_rate() >= 0 ):
-							# mp.set_rate(-1.0)
-						# else:
-							# mp.set_rate( mp.get_rate() * 2 )
+						PyNuvoServer.Sources[source_num].prev_playList()
 				else:
 					print msg
 					assert False
@@ -308,15 +302,10 @@ class PyNuvoService(rpyc.Service):
 			
 			i = vlc.Instance()
 			mp = i.media_player_new()
-			m = i.media_new( get_playlists('d:\music')[0] )
-			
-			mp.set_media(m)
-			mp.play()
-			time.sleep(.5)
+			self.exposed_playLists = get_playlists('d:\music')
+			self.exposed_cur_playList = 0
 			
 			self.exposed_vlcPlayer = mp
-			self.exposed_vlcMedia = m
-			self.exposed_vlcSongHistory = list()
 			
 			mp.event_manager().event_attach( vlc.EventType.MediaPlayerEndReached, self.event_player_end_reached, self.exposed_number )
 			mp.event_manager().event_attach( vlc.EventType.MediaPlayerPlaying, self.event_player_playing, self.exposed_number )
@@ -326,7 +315,7 @@ class PyNuvoService(rpyc.Service):
 			mp.event_manager().event_attach( vlc.EventType.MediaPlayerBackward, self.event_player_backward, self.exposed_number )
 			#mp.event_manager().event_attach( vlc.EventType.MediaPlayerTimeChanged, self.event_player_time_change, self.exposed_number )
 			
-			self.next_song()
+			self.update_playList()
 			
 		def prev_song(self):
 			mp = self.exposed_vlcPlayer
@@ -340,6 +329,28 @@ class PyNuvoService(rpyc.Service):
 				
 			play = threading.Thread(target = self.play_song)
 			play.start()
+			
+		def next_playList(self):
+			self.exposed_cur_playList = (self.exposed_cur_playList + 1) % len(self.exposed_playLists)
+			self.update_playList()
+			
+		def prev_playList(self):
+			self.exposed_cur_playList = (self.exposed_cur_playList - 1) % len(self.exposed_playLists)
+			self.update_playList()
+
+		def update_playList(self):
+			mp = self.exposed_vlcPlayer
+			mp.stop()
+			m = mp.get_instance().media_new( self.exposed_playLists[ self.exposed_cur_playList ] )
+			
+			mp.set_media(m)
+			mp.play()
+			time.sleep(.5)
+			
+			self.exposed_vlcMedia = m
+			self.exposed_vlcSongHistory = list()
+			
+			self.next_song()
 			
 		def next_song(self):
 			mp = self.exposed_vlcPlayer
@@ -360,20 +371,20 @@ class PyNuvoService(rpyc.Service):
 			m = self.exposed_vlcMedia
 			nm = m.subitems()[self.exposed_vlcSongHistory[-1]]
 			
-			line1 = ''
+			playList = self.exposed_playLists[ self.exposed_cur_playList ]
+			line1 = os.path.splitext(os.path.basename(playList[1]))[0]
+			
 			line2 = ''
 			line3 = ''
 			line4 = ''
 			
 			if( nm.get_meta(vlc.Meta.TrackNumber) != None ) :
-				line1 = nm.get_meta(vlc.Meta.TrackNumber)
+				line2 = nm.get_meta(vlc.Meta.TrackNumber)
 				if( nm.get_meta(vlc.Meta.Album) != None ) :
-					line1 += '. ' + nm.get_meta(vlc.Meta.Album)
+					line2 += '. ' + nm.get_meta(vlc.Meta.Album)
 			elif( nm.get_meta(vlc.Meta.Album) != None ) :
-				line1 = nm.get_meta(vlc.Meta.Album)
+				line2 = nm.get_meta(vlc.Meta.Album)
 				
-			if( nm.get_meta(vlc.Meta.Genre) != None ) :
-				line2 = nm.get_meta(vlc.Meta.Genre)
 			if( nm.get_meta(vlc.Meta.Title) != None ) :
 				line3 = nm.get_meta(vlc.Meta.Title)
 			if( nm.get_meta(vlc.Meta.Artist) != None ) :
