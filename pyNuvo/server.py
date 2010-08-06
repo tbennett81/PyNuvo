@@ -390,7 +390,7 @@ class PyNuvoService(rpyc.Service):
 			if( nm.get_meta(vlc.Meta.Artist) != None ) :
 				line4 = nm.get_meta(vlc.Meta.Artist)
 				
-			PyNuvoServer.Send( SOURCE.DISPLINE(self.exposed_number, line1, line2, line3, line4 ) )
+			PyNuvoServer.Send( SOURCE.DISPLINE(self.exposed_number, line1, line2[0:20], line3[0:15], line4[0:15] ) )
 
 			while( not mp.will_play ):
 				time.sleep(.1)
@@ -439,7 +439,7 @@ class PyNuvoService(rpyc.Service):
 			source = PyNuvoServer.Sources[num-1]
 			mp = source.exposed_vlcPlayer
 			# PyNuvoServer.Send( SOURCE.DISPINFO(source.exposed_number, mp.get_length()/100, mp.get_time()/100, consts.StatusType.Rewind ) )
-			
+
 class exposed__SDispInfo:
 	def __init__(self):
 		self.exposed_duration = None
