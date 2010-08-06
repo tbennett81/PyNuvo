@@ -307,6 +307,8 @@ class PyNuvoService(rpyc.Service):
 			
 			self.exposed_vlcPlayer = mp
 			
+			self.update_playList()
+
 			mp.event_manager().event_attach( vlc.EventType.MediaPlayerEndReached, self.event_player_end_reached, self.exposed_number )
 			mp.event_manager().event_attach( vlc.EventType.MediaPlayerPlaying, self.event_player_playing, self.exposed_number )
 			mp.event_manager().event_attach( vlc.EventType.MediaPlayerPaused, self.event_player_paused, self.exposed_number )
@@ -314,8 +316,6 @@ class PyNuvoService(rpyc.Service):
 			mp.event_manager().event_attach( vlc.EventType.MediaPlayerForward, self.event_player_forward, self.exposed_number )
 			mp.event_manager().event_attach( vlc.EventType.MediaPlayerBackward, self.event_player_backward, self.exposed_number )
 			#mp.event_manager().event_attach( vlc.EventType.MediaPlayerTimeChanged, self.event_player_time_change, self.exposed_number )
-			
-			self.update_playList()
 			
 		def prev_song(self):
 			mp = self.exposed_vlcPlayer
@@ -372,7 +372,7 @@ class PyNuvoService(rpyc.Service):
 			nm = m.subitems()[self.exposed_vlcSongHistory[-1]]
 			
 			playList = self.exposed_playLists[ self.exposed_cur_playList ]
-			line1 = os.path.splitext(os.path.basename(playList[1]))[0]
+			line1 = os.path.splitext(os.path.basename(playList))[0]
 			
 			line2 = ''
 			line3 = ''
