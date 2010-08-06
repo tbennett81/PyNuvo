@@ -191,7 +191,10 @@ class PyNuvoServer(ThreadedServer):
 				elif var[0] == 'ON':
 					status.exposed_power = True
 					status.exposed_source = int(var[1][3:])
-					status.exposed_volume = int(var[2][3:])
+					if( var[2] == 'MUTE' ):
+						status.exposed_volume = 0
+					else:
+						status.exposed_volume = int(var[2][3:])
 					status.exposed_dnd = int(var[3][3:])
 					status.exposed_lock = int(var[4][4:])
 			elif msg[0:6] == 'ACTIVE':
