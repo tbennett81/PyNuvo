@@ -1,28 +1,32 @@
+#!/usr/bin/env python
 from setuptools import setup, find_packages
-import sys, os
 
-version = '0.1'
+exec( open( 'pynuvo/package_version.py' ).read() )
 
-setup(name='pyNuvo',
-      version=version,
-      description="Nuvo Grand Concerto Communicator",
-      long_description="""\
-""",
-      classifiers=[], # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
-      keywords='nuvo concerto',
-      author='Travis Bennett',
-      author_email='tbennett81@hotmail.com',
-      url='',
-      license='',
-      packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
-      include_package_data=True,
-      zip_safe=False,
-      install_requires=[
-		'pyserial',
-		'rpyc',
-          # -*- Extra requirements: -*-
-      ],
-      entry_points="""
-      # -*- Entry points: -*-
-      """,
-      )
+setup(
+    name = 'pyNuvo',
+    version = __version__,
+    packages=find_packages(),
+    package_data = {
+        'pynuvo': [
+            'www/static/*.*',
+            'www/static/css/smoothness/*.css',
+            'www/static/css/smoothness/images/*.*',
+            'www/static/js/*.js',
+            'www/templates/admin/*.html',
+            'www/templates/devdocs/jquery/*.html',
+            ],
+        },
+    scripts = [
+        'scripts/*.py'
+        ],
+    install_requires=[
+        'pyserial>=2.7',
+        'rpyc>=3.2.3',
+        'django>=1.6.1'
+    ],
+    
+    description="Nuvo Grand Concerto Communicator",
+    author='Travis Bennett',
+    author_email='tbennett81@hotmail.com',
+)
