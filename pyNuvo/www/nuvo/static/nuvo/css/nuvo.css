@@ -1,0 +1,69 @@
+* {
+  -webkit-box-sizing: border-box;
+     -moz-box-sizing: border-box;
+          box-sizing: border-box;
+    }
+/* .ui-widget { font-size:90% } */
+.ui-dialog .ui-dialog-content { padding: 0; }
+.no-close .ui-dialog-titlebar-close { display: none }
+.list-select-button { width: 100% }
+    
+.nuvo-title { font-size: larger; text-align: center }
+#zone-power { float: right; padding:0; margin:0 }
+.zone-sub-header{
+    background: #666666;
+    padding: .5em;
+    }
+.zone-sub-header label{
+    font-size: larger;
+    color: #FFFFFF;
+    }
+ 
+#zone-source{
+    position: relative;
+    }
+#zone-source-options{ 
+    display: inline-block;
+    vertical-align:top;
+    width:10em;
+    padding-top:.3em;
+    padding-bottom:.3em;
+    padding-left:1em;
+    padding-right:.5em;
+    }
+#zone-source-info{
+    display: inline-block;
+    vertical-align:top;
+    width:20em;
+    padding-top:.3em;
+    padding-bottom:.3em;
+    padding-left:.5em;
+    padding-right:.5em;
+    }
+.zone-source-select-label{ width:100% }
+
+#source-states{
+    display: inline-block;
+    vertical-align:top;
+    width:58%;
+    padding:1em;
+    }
+#source-gain{
+    display: inline-block;
+    vertical-align: top;
+    width:40%;
+    padding: 1em;
+    text-align:center;
+    }
+#source-gain-slider{
+    margin-left:auto;
+    margin-right:auto;
+    }
+#source-gain-text{
+    border:0;
+    width:2em;
+    }
+.source-config-label{ width:100% }
+
+
+

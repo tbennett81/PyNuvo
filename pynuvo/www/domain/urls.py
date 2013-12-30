@@ -17,7 +17,7 @@ if settings.DEBUG:
     show_indexes = True
 
 urlpatterns += patterns( '',
-    url( r'^%s(?P<path>.*)$' % settings.STATIC_URL[1:], 'django.views.static.serve', 
+    url( r'^dev/(?P<path>.*)$', 'django.views.static.serve', 
         kwargs = {'document_root': settings.BASE_DIR + settings.STATIC_URL, 'show_indexes': show_indexes} )
 )
     

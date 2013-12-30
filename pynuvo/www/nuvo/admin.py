@@ -1,16 +1,13 @@
 from django.contrib import admin
-from nuvo.models import Source, Display, Zone
-    
-class DisplayInline( admin.StackedInline ):
-    model = Display
-    
+from nuvo.models import Source, Zone
+        
 class SourceAdmin( admin.ModelAdmin ):
     fieldsets = [
         ( None, { 'fields': ['number', 'name', 'short_name', 'active'] } ),
         ( 'Configuration', { 'fields': ['enabled', 'gain', 'nuvonet', 'use_status'] } ),
+        ( 'Display', { 'fields': [ 'display_line_1', 'display_line_2', 'display_line_3', 'display_line_4' ] } ),
         ( 'Status', { 'fields': [ 'duration', 'position', 'state' ] } ),
         ]
-    inlines = [DisplayInline]
     
 class ZoneAdmin(admin.ModelAdmin):
     fieldsets = [

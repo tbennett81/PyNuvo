@@ -1,0 +1,15 @@
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Nuvo</title>
+</head>
+<body>
+{% if object_list %}
+    {% for object in object_list %}
+        <button id="{{ object.name }}" class='list-select-button' onclick="javascript:window.location.href='{% url view_url object.name %}'"> {{ object.name }} </button>
+    {% endfor %}
+{% else %}
+    <p>None found.</p>
+{% endif %}
+</body>
+</html>

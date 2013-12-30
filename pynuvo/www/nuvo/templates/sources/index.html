@@ -1,9 +1,0 @@
-{% if source_list %}
-    <ul>
-    {% for source in source_list %}
-        <li><a href="{% url 'nuvo:sourceDetail' source.number %}">{{ source.name }}</a></li>
-    {% endfor %}
-    </ul>
-{% else %}
-    <p>No sources are available.</p>
-{% endif %}

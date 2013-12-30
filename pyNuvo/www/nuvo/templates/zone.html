@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Nuvo</title>
+    <link rel="stylesheet" href="{{ STATIC_URL }}css/smoothness/jquery-ui.min.css">
+    <link rel="stylesheet" href="{{ STATIC_URL }}nuvo/css/nuvo.css">
+    <script src="{{ STATIC_URL }}js/jquery.js"></script>
+    <script>
+    $( document ).ready(function() {
+        $( '#zone-select' ).load( "{% url 'nuvo:model_list' 'zones' %}" );
+        $( '#zone-source-info' ).load( "{% url 'nuvo:source_view' current_zone.source.name %}" );
+        
+        $( "#zone-title" ).click( function() {
+            $( "#zone-select" ).dialog( "open" );
+            } );
+
+        $( "#zone-power" ).button( {
+            text: false,
+            icons: {
+                primary: "ui-icon-power"
+                }
+            } );
+            
+        $( "#zone-source-status" )
+            .button( {
+                text: false,
+                icons: {
+                    primary: "ui-icon-signal"
+                    },
+                } );
+                
+        $( "#zone-select" ).dialog( { 
+            height: 'auto',
+            autoOpen: false,
+            modal: true,
+            } );  
+
+        $( ".zone-source-select" ).button({});
+        
+        $( "#zone-volume" ).slider( {
+            min: 0,
+            max: 79,
+            step: 1,
+            range: "min",
+            animate: true,
+            value: {{ current_zone.volume }},
+            slide: function( event, ui ) {
+                
+                },
+            } );
+        } );
+    </script>
+    <script src="{{ STATIC_URL }}js/jquery-ui.min.js"></script>
+</head>
+<body>
+<div id="zone-select" title="Select Zone"></div>
+<div id="header" class="ui-widget-header  ui-corner-tl ui-corner-tr">
+    <button id='zone-power'>Power</button>
+    <label id="zone-title" class="nuvo-title"><h2>{{ current_zone.name }}</h2></label>
+</div>
+<div id="zone-source" class="ui-widget-content">
+    <div id="zone-source-header" class="zone-sub-header">
+        <button id='zone-source-status'>Status</button>
+        <label>Source</label>
+    </div>
+    <div id="zone-source-options">
+        {% for source in enabled_sources %}
+            <input type="radio" id="{{source.name}}" name="radio" class="zone-source-select">
+            <label for="{{source.name}}" class="zone-source-select-label">{{source.name}}</label>
+        {% endfor %}
+    </div>
+    <div id="zone-source-info"/>
+</div>
+<div id="zone-audio-settings"
+</body>
+</html>

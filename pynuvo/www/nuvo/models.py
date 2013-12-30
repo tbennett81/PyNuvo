@@ -10,17 +10,17 @@ class Source( models.Model ):
     number = models.SmallIntegerField( primary_key=True, validators=[MinValueValidator(1), MaxValueValidator(6)] )
     name = models.CharField( max_length=20 )
     short_name = models.CharField( max_length=3 )
-    active = models.BooleanField()
+    active = models.BooleanField( default=True )
 
     #Configuration
-    enabled = models.BooleanField()
-    gain = models.SmallIntegerField( validators=[MinValueValidator(0), MaxValueValidator(14)] )
-    nuvonet = models.BooleanField()
-    use_status = models.BooleanField()
+    enabled = models.BooleanField( default=True )
+    gain = models.SmallIntegerField( validators=[MinValueValidator(0), MaxValueValidator(14)], default=0 )
+    nuvonet = models.BooleanField( default=False )
+    use_status = models.BooleanField( default=True )
     
     #Status
-    duration = models.SmallIntegerField( null=True )
-    position = models.SmallIntegerField( null=True )
+    duration = models.SmallIntegerField( default=0 )
+    position = models.SmallIntegerField( default=0 )
     
     NORMAL = 0
     IDLE = 1
@@ -42,17 +42,15 @@ class Source( models.Model ):
         ( PLAY_REPEAT, 'Play Repeat' ),
         ( PLAY_SHUFFLE_REPEAT, 'Play Shuffle Repeat' ),
     )
-    state = models.SmallIntegerField( choices=STATE_CHOICES )
+    state = models.SmallIntegerField( choices=STATE_CHOICES, default=NORMAL )
+    
+    display_line_1 = models.CharField( max_length=30, blank=True, default='' )
+    display_line_2 = models.CharField( max_length=30, blank=True, default='' )
+    display_line_3 = models.CharField( max_length=30, blank=True, default='' )
+    display_line_4 = models.CharField( max_length=30, blank=True, default='' )
     
     def __unicode__( self ):
         return self.name    
-    
-class Display( models.Model ):
-    source = models.OneToOneField( Source )
-    line_1 = models.CharField( max_length=30, blank=True )
-    line_2 = models.CharField( max_length=30, blank=True )
-    line_3 = models.CharField( max_length=30, blank=True )
-    line_4 = models.CharField( max_length=30, blank=True )
     
 class Zone( models.Model ):
     number = models.SmallIntegerField( primary_key=True, validators=[MinValueValidator(1), MaxValueValidator(20)] )
@@ -62,8 +60,8 @@ class Zone( models.Model ):
     active = models.BooleanField( default=True )
     #Status
     power = models.BooleanField( default=False )
-    source = models.ForeignKey( Source, verbose_name='Current Source' )
-    volume = models.SmallIntegerField( validators=[MinValueValidator(0), MaxValueValidator(79)], verbose_name='Current Volume' )
+    source = models.ForeignKey( Source, verbose_name='Current Source', default=1 )
+    volume = models.SmallIntegerField( validators=[MinValueValidator(0), MaxValueValidator(79)], verbose_name='Current Volume', default=25 )
     mute = models.BooleanField( default=False )
     dnd = models.BooleanField( verbose_name='Do Not Disturb', default=False )
     locked = models.BooleanField( default=False )

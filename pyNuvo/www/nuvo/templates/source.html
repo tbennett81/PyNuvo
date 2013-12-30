@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Nuvo</title>
+    <script>
+    $( document ).ready(function() {
+        $( "#source-config" ).dialog( { 
+            height: 'auto',
+            autoOpen: false,
+            modal: true,
+            buttons: {
+                "Save Changes": function() {},
+                }
+            } );
+
+        $( "#source-config-button" )
+            .button( {
+                text: false,
+                icons: {
+                    primary: "ui-icon-gear"
+                    }
+                } )
+            .click( function() {
+                $( "#source-config" ).dialog( "open" );
+                } );        
+                
+        $( "#source-gain-slider" ).slider( {
+            min: 0,
+            max: 14,
+            step: 1,
+            range: "min",
+            animate: true,
+            orientation: "vertical",
+            value: {{ current_source.gain }},
+            slide: function( event, ui ) {
+                $( "#source-gain-text" ).val( ui.value );
+                },
+            } );
+        $( "#source-gain-text" ).val( $( "#source-gain-slider" ).slider( "value" ) );
+        
+        $( "#source-control" ).buttonset();
+        
+        $( "#source-previous" ).button( {
+            text: false,
+            icons: {
+                primary: "ui-icon-seek-start"
+                }
+            } );
+            
+        $( "#source-play" )
+            .button( {
+                text: false,
+                icons: {
+                    primary: "ui-icon-play"
+                    }
+                } )
+            .click(
+                function() {
+                    var options;
+                    if ( $( this ).text() === "play" ) {
+                        options = {
+                            label: "pause",
+                            icons: {
+                                primary: "ui-icon-pause"
+                                }
+                            };
+                        } 
+                    else {
+                        options = {
+                            label: "play",
+                            icons: {
+                                primary: "ui-icon-play"
+                                }
+                            };
+                        }
+                    $( this ).button( "option", options );
+                    } 
+                );
+                
+        $( "#source-stop" )
+            .button( {
+                text: false,
+                icons: {
+                    primary: "ui-icon-stop"
+                    }
+                } )
+            .click(
+                function() {
+                    $( "#play" ).button( "option", {
+                        label: "play",
+                        icons: {
+                            primary: "ui-icon-play"
+                            }
+                        } );
+                    } 
+                );
+                
+        $( "#source-next" ).button( {
+            text: false,
+            icons: {
+                primary: "ui-icon-seek-end"
+                }
+            } );
+       
+        $( "#source-shuffle" ).button( {
+            text: false,
+            icons: {
+                primary: "ui-icon-shuffle"
+                }
+            } );
+            
+        $( "#source-repeat" ).button( {
+            text: false,
+            icons: {
+                primary: "ui-icon-refresh"
+                }
+            } );
+        $( "#source-active" ).button( {} );
+        $( "#source-enabled" ).button( {} );
+        $( "#source-nuvonet" ).button( {
+            disabled: true,
+            } );
+        $( "#source-use-status" ).button( {
+            disabled: true,
+            } );
+        } );
+    </script>
+</head>
+<body>
+<div class='source-title'>
+    <button id='source-config-button'>Config</button>
+    <label id="source-id">{{ current_source.name }} ({{ current_source.short_name }})</label>
+</div>
+<div class='source-display'>
+<ul>
+    <li>{{ current_source.display_line_1 }}
+    <li>{{ current_source.display_line_2 }}
+    <li>{{ current_source.display_line_3 }}
+    <li>{{ current_source.display_line_4 }}
+</ul>
+</div>
+<div id='source-control'>
+    <button id="source-previous">|<- Prev</button>
+    <button id="source-play">Play</button>
+    <button id="source-next">Next ->|</button>
+    <input type="checkbox" id="source-shuffle"><label for="source-shuffle">Shuffle</label>
+    <input type="checkbox" id="source-repeat"><label for="source-repeat">Repeat</label>
+</div>
+
+<div id='source-config' title="Source Configuration">
+    <div id='source-states'>
+        <input type="checkbox" id="source-active" checked={{ current_source.active }}>
+        <label for="source-active" class="source-config-label">Active</label>
+        <input type="checkbox" id="source-enabled" checked={{ current_source.enabled }}>
+        <label for="source-enabled" class="source-config-label">Enabled</label>
+        <input type="checkbox" id="source-nuvonet" checked={{ current_source.nuvonet }}>
+        <label for="source-nuvonet" class="source-config-label">Nuvonet</label>
+        <input type="checkbox" id="source-use-status" checked={{ current_source.use_status }}>
+        <label for="source-use-status" class="source-config-label">Use Status</label>
+    </div>
+    <div id='source-gain'>
+        <div id='source-gain-slider'/>
+        <p>
+            <label for="source-gain-text">Gain:</label>
+            <input type="text" id="source-gain-text">
+        </p>
+    </div>
+</div>
+</body>
+</html>
